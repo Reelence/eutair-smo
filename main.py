@@ -4,6 +4,7 @@ import streamlit as st
 import datetime
 import requests
 import os
+import re
 
 st.set_page_config(page_title="Eutair SMO Automation", layout="centered")
 
@@ -29,14 +30,20 @@ if st.button("Generate AI Content"):
         with st.spinner("Generating content using Falcon AI..."):
             try:
                 payload = {
-                    "inputs": f"You are a creative social media content writer for an industrial compressor company. Create a catchy LinkedIn/Instagram post about: {requirement}. Include a caption and relevant hashtags."
+                    "inputs": f"Write a catchy LinkedIn/Instagram post promoting the following product or topic: {requirement}. Keep it concise, friendly, and include relevant hashtags only."
                 }
                 response = requests.post(api_url, headers=headers, json=payload)
                 if response.status_code == 200:
                     result = response.json()
                     ai_text = result[0]['generated_text'] if isinstance(result, list) else result.get("generated_text", "")
+
+                    # --- Clean-up junk or echoed prompt ---
+                    cleaned_text = re.sub(r"You are.*?about: ", "", ai_text, flags=re.IGNORECASE)
+                    cleaned_text = re.sub(r"\[.*?\]", "", cleaned_text)  # remove bracketed junk
+                    cleaned_text = re.sub(r"https?://\S+", "", cleaned_text)  # remove links
+
                     st.success("✅ AI Content Generated")
-                    st.markdown(ai_text)
+                    st.markdown(cleaned_text.strip())
                 else:
                     st.error(f"API Error {response.status_code}: {response.text}")
             except Exception as e:
@@ -68,4 +75,4 @@ st.metric(label="Comments", value="150")
 
 st.markdown("**AI Recommendation:** Try using short videos showcasing real-time usage of compressors to increase engagement on Instagram.")
 
-st.info("✅ This MVP now uses Falcon via Hugging Face to generate captions and hashtags. Posting and analytics integrations are coming next!")
+st.info("✅ This MVP now uses Falcon via Hugging Face to generate clean captions and hashtags. Posting and analytics integrations are coming next!")
