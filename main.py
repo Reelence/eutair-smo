@@ -11,7 +11,7 @@ st.set_page_config(page_title="Eutair SMO Automation", layout="centered")
 st.title("📣 Eutair Social Media Automation MVP")
 
 # --- Load OpenAI API Key from Streamlit Secrets ---
-openai.api_key = st.secrets["openai_api_key"]
+client = openai.OpenAI(api_key=st.secrets["openai_api_key"])
 
 # --- Input: Requirement ---
 st.subheader("Step 1: Enter Your Requirement")
@@ -23,7 +23,7 @@ if st.button("Generate AI Content"):
     if requirement:
         with st.spinner("Generating content using GPT-3.5 Turbo..."):
             try:
-                response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "You are a creative social media content writer for an industrial compressor company."},
