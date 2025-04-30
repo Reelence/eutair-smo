@@ -1,33 +1,49 @@
-# main.py
+# File: main.py
 
 import streamlit as st
 import datetime
+import openai
+import os
 
 st.set_page_config(page_title="Eutair SMO Automation", layout="centered")
 
 st.title("📣 Eutair Social Media Automation MVP")
 
-# Step 1 - Requirement
+# --- Load API Key from Streamlit Secrets ---
+openai.api_key = st.secrets["openai_api_key"]
+
+# --- Input: Requirement ---
 st.subheader("Step 1: Enter Your Requirement")
 requirement = st.text_input("What do you want to post about?", placeholder="e.g. Promote Eutair’s energy-efficient compressor")
 
-# Step 2 - AI Content Generation (Mock)
-st.subheader("Step 2: Generate Content")
+# --- Content Generation ---
+st.subheader("Step 2: Generate AI Content")
 if st.button("Generate AI Content"):
     if requirement:
-        st.success("✅ AI Content Generated")
-        st.markdown(f"**Caption:** Boost your business with Eutair’s latest innovation – {requirement}  \n\n#Eutair #CompressedAir #EnergySaving")
-        st.markdown("**Hashtags:** #IndustrialSolutions #SmartMachinery #SustainableEnergy")
+        with st.spinner("Generating content using AI..."):
+            try:
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are a creative social media content writer for an industrial compressor company."},
+                        {"role": "user", "content": f"Create a catchy LinkedIn/Instagram post about: {requirement}. Include a caption and relevant hashtags."}
+                    ]
+                )
+                ai_content = response.choices[0].message.content
+                st.success("✅ AI Content Generated")
+                st.markdown(ai_content)
+            except Exception as e:
+                st.error(f"Error generating content: {e}")
     else:
         st.warning("Please enter a requirement first.")
 
-# Step 3 - Upload Image
+# --- Media Upload / Image Creation Placeholder ---
 st.subheader("Step 3: Upload Product Image")
 image_file = st.file_uploader("Upload an image (JPG/PNG)", type=["jpg", "jpeg", "png"])
 if image_file:
     st.image(image_file, caption="Uploaded Image", use_column_width=True)
 
-# Step 4 - Scheduling (Mock)
+# --- Posting Placeholder ---
 st.subheader("Step 4: Schedule or Post Manually")
 schedule = st.checkbox("Schedule this post?")
 if schedule:
@@ -37,7 +53,7 @@ if schedule:
 else:
     st.button("Download Media for Manual Posting")
 
-# Step 5 - Insights
+# --- Stats & Suggestions Placeholder ---
 st.subheader("Step 5: Insights (Mock Data)")
 st.metric(label="Post Likes", value="1,200")
 st.metric(label="Shares", value="300")
@@ -45,4 +61,4 @@ st.metric(label="Comments", value="150")
 
 st.markdown("**AI Recommendation:** Try using short videos showcasing real-time usage of compressors to increase engagement on Instagram.")
 
-st.info("✅ This is a working MVP template. Image generator, auto-posting, and analytics APIs will be integrated in the next phases.")
+st.info("✅ This MVP now uses real AI to generate captions and hashtags. Posting and analytics integrations are coming next!")
