@@ -2,7 +2,7 @@
 
 import streamlit as st
 import datetime
-import requests
+import openai
 import os
 import re
 
@@ -10,14 +10,8 @@ st.set_page_config(page_title="Eutair SMO Automation", layout="centered")
 
 st.title("📣 Eutair Social Media Automation MVP")
 
-# --- Load Hugging Face Token from Streamlit Secrets ---
-hf_token = st.secrets["hf_token"]
-headers = {
-    "Authorization": f"Bearer {hf_token}",
-    "Content-Type": "application/json"
-}
-
-api_url = "https://api-inference.huggingface.co/models/tiiuae/falcon-rw-1b"
+# --- Load OpenAI API Key from Streamlit Secrets ---
+openai.api_key = st.secrets["openai_api_key"]
 
 # --- Input: Requirement ---
 st.subheader("Step 1: Enter Your Requirement")
@@ -27,25 +21,19 @@ requirement = st.text_input("What do you want to post about?", placeholder="e.g.
 st.subheader("Step 2: Generate AI Content")
 if st.button("Generate AI Content"):
     if requirement:
-        with st.spinner("Generating content using Falcon AI..."):
+        with st.spinner("Generating content using GPT-3.5 Turbo..."):
             try:
-                payload = {
-                    "inputs": f"Write a catchy LinkedIn/Instagram post promoting the following product or topic: {requirement}. Keep it concise, friendly, and include relevant hashtags only."
-                }
-                response = requests.post(api_url, headers=headers, json=payload)
-                if response.status_code == 200:
-                    result = response.json()
-                    ai_text = result[0]['generated_text'] if isinstance(result, list) else result.get("generated_text", "")
-
-                    # --- Clean-up junk or echoed prompt ---
-                    cleaned_text = re.sub(r"You are.*?about: ", "", ai_text, flags=re.IGNORECASE)
-                    cleaned_text = re.sub(r"\[.*?\]", "", cleaned_text)  # remove bracketed junk
-                    cleaned_text = re.sub(r"https?://\S+", "", cleaned_text)  # remove links
-
-                    st.success("✅ AI Content Generated")
-                    st.markdown(cleaned_text.strip())
-                else:
-                    st.error(f"API Error {response.status_code}: {response.text}")
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are a creative social media content writer for an industrial compressor company."},
+                        {"role": "user", "content": f"Create a catchy LinkedIn/Instagram post about: {requirement}. Include a caption and relevant hashtags."}
+                    ]
+                )
+                ai_text = response.choices[0].message.content
+                cleaned_text = re.sub(r"\[.*?\]", "", ai_text)
+                st.success("✅ AI Content Generated")
+                st.markdown(cleaned_text.strip())
             except Exception as e:
                 st.error(f"Error generating content: {e}")
     else:
@@ -75,4 +63,4 @@ st.metric(label="Comments", value="150")
 
 st.markdown("**AI Recommendation:** Try using short videos showcasing real-time usage of compressors to increase engagement on Instagram.")
 
-st.info("✅ This MVP now uses Falcon via Hugging Face to generate clean captions and hashtags. Posting and analytics integrations are coming next!")
+st.info("✅ This MVP now uses GPT-3.5 Turbo via OpenAI for fast, stable content generation. Posting and analytics integrations are coming next!")
