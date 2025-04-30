@@ -16,7 +16,7 @@ headers = {
     "Content-Type": "application/json"
 }
 
-api_url = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1"
+api_url = "https://api-inference.huggingface.co/models/tiiuae/falcon-rw-1b"
 
 # --- Input: Requirement ---
 st.subheader("Step 1: Enter Your Requirement")
@@ -26,7 +26,7 @@ requirement = st.text_input("What do you want to post about?", placeholder="e.g.
 st.subheader("Step 2: Generate AI Content")
 if st.button("Generate AI Content"):
     if requirement:
-        with st.spinner("Generating content using Mistral AI..."):
+        with st.spinner("Generating content using Falcon AI..."):
             try:
                 payload = {
                     "inputs": f"You are a creative social media content writer for an industrial compressor company. Create a catchy LinkedIn/Instagram post about: {requirement}. Include a caption and relevant hashtags."
@@ -68,4 +68,4 @@ st.metric(label="Comments", value="150")
 
 st.markdown("**AI Recommendation:** Try using short videos showcasing real-time usage of compressors to increase engagement on Instagram.")
 
-st.info("✅ This MVP now uses Mistral via Hugging Face to generate captions and hashtags. Posting and analytics integrations are coming next!")
+st.info("✅ This MVP now uses Falcon via Hugging Face to generate captions and hashtags. Posting and analytics integrations are coming next!")
