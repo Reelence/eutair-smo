@@ -2,15 +2,21 @@
 
 import streamlit as st
 import datetime
-import openai
+import requests
 import os
 
 st.set_page_config(page_title="Eutair SMO Automation", layout="centered")
 
 st.title("📣 Eutair Social Media Automation MVP")
 
-# --- Load API Key from Streamlit Secrets ---
-client = openai.OpenAI(api_key=st.secrets["openai_api_key"])
+# --- Load Hugging Face Token from Streamlit Secrets ---
+hf_token = st.secrets["hf_token"]
+headers = {
+    "Authorization": f"Bearer {hf_token}",
+    "Content-Type": "application/json"
+}
+
+api_url = "https://api-inference.huggingface.co/models/deepseek-ai/deepseek-llm-7b-chat"
 
 # --- Input: Requirement ---
 st.subheader("Step 1: Enter Your Requirement")
@@ -20,18 +26,19 @@ requirement = st.text_input("What do you want to post about?", placeholder="e.g.
 st.subheader("Step 2: Generate AI Content")
 if st.button("Generate AI Content"):
     if requirement:
-        with st.spinner("Generating content using AI..."):
+        with st.spinner("Generating content using DeepSeek AI..."):
             try:
-                response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": "You are a creative social media content writer for an industrial compressor company."},
-                        {"role": "user", "content": f"Create a catchy LinkedIn/Instagram post about: {requirement}. Include a caption and relevant hashtags."}
-                    ]
-                )
-                ai_content = response.choices[0].message.content
-                st.success("✅ AI Content Generated")
-                st.markdown(ai_content)
+                payload = {
+                    "inputs": f"You are a creative social media content writer for an industrial compressor company. Create a catchy LinkedIn/Instagram post about: {requirement}. Include a caption and relevant hashtags."
+                }
+                response = requests.post(api_url, headers=headers, json=payload)
+                if response.status_code == 200:
+                    result = response.json()
+                    ai_text = result[0]['generated_text'] if isinstance(result, list) else result.get("generated_text", "")
+                    st.success("✅ AI Content Generated")
+                    st.markdown(ai_text)
+                else:
+                    st.error(f"API Error {response.status_code}: {response.text}")
             except Exception as e:
                 st.error(f"Error generating content: {e}")
     else:
@@ -61,4 +68,4 @@ st.metric(label="Comments", value="150")
 
 st.markdown("**AI Recommendation:** Try using short videos showcasing real-time usage of compressors to increase engagement on Instagram.")
 
-st.info("✅ This MVP now uses real AI to generate captions and hashtags. Posting and analytics integrations are coming next!")
+st.info("✅ This MVP now uses DeepSeek via Hugging Face to generate captions and hashtags. Posting and analytics integrations are coming next!")
