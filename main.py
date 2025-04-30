@@ -22,7 +22,8 @@ if st.button("Generate AI Content"):
     if requirement:
         with st.spinner("Generating content using AI..."):
             try:
-                response = openai.ChatCompletion.create(
+                client = openai.OpenAI()
+                response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "You are a creative social media content writer for an industrial compressor company."},
